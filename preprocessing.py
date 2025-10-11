@@ -20,10 +20,9 @@ def load_reviews(base_dir, label):
     for fold in range(1, 6):  # 5 folds
         fold_dir = os.path.join(base_dir, f"fold{fold}") #creates path for each fold directory e.g. truthful_from_Web/fold1
         for filename in os.listdir(fold_dir): # for every file in the fold 
-            if filename.endswith(".txt"): #checks if file .txt 
-                with open(os.path.join(fold_dir, filename), "r", encoding="utf-8") as f: #opens file to read it with utf-8 encoding
-                    text = f.read().strip() # read all the content of file and removes whitespace from start and ending
-                    data.append({"review_text": text, "label": label, "fold": fold}) # add dictionary in data list with three columns: the text , the label and which fold number
+            with open(os.path.join(fold_dir, filename), "r", encoding="utf-8") as f: #opens file to read it with utf-8 encoding
+                text = f.read().strip() # read all the content of file and removes whitespace from start and ending
+                data.append({"review_text": text, "label": label, "fold": fold}) # add dictionary in data list with three columns: the text , the label and which fold number
     return pd.DataFrame(data) 
 
 truthful_df = load_reviews("truthful_from_Web", "truthful") # loads truthful reviews and assign truthful label

@@ -63,7 +63,7 @@ def preprocess_text(text):
     return " ".join(tokens)
 
 # Apply preprocessing 
-df["clean_text"] = df["review_text"].apply(preprocess_text)
+df["clean_text"] = df["text"].apply(preprocess_text)
 
 # Split folds 1-4 for training and fold 5 for testing
 train_df = df[df["fold"] < 5].reset_index(drop=True) 

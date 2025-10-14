@@ -15,18 +15,22 @@ nltk.download('punkt', quiet=True)
 nltk.download('punkt_tab', quiet=True) 
 
 # Load reviews
-def load_reviews(base_dir, label):
+def load_reviews(path, label):
     """
     Load reviews from fold directories and assign labels.
     """
     data = []
-    for fold in range(1, 6): 
-        fold_dir = os.path.join(base_dir, f"fold{fold}")
-        for filename in os.listdir(fold_dir): 
-            with open(os.path.join(fold_dir, filename), "r", encoding="utf-8") as f: 
-                text = f.read().strip() 
-                data.append({"review_text": text, "label": label, "fold": fold}) 
-    return pd.DataFrame(data) 
+    for fold in range(1,6):
+        folder = path + f"/fold{fold}"
+        for file in os.listdir(folder):
+            with open(os.path.join(folder, file), "r", encoding="utf-8") as f:
+                text = f.read().strip()
+                data.append({
+                    "text": text,
+                    "label": label,
+                    "fold": fold
+                })
+    return pd.DataFrame(data)
 
 # Load and merge datasets 
 truthful_df = load_reviews("negative_polarity/truthful_from_Web", "truthful") 

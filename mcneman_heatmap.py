@@ -61,6 +61,7 @@ def mcnemar_heatmap(file_list, display_names=None, figsize=(10, 8), annotate=Tru
 
 # Example: nice short labels to match your screenshot
 labels = [
+    "Multinomial Naive Bayes (both)",
     "Logistic Regression (both)",
 
     "Classification Tree (both)",
@@ -72,7 +73,7 @@ labels = [
 files = [
 
     #"predictions_MNB_unigrams.csv",
-    #"predictions_MNB_unigramsandbigrams.csv", 
+    "predictions_MNB_unigramsandbigrams.csv", 
     #"predictions_LR_unigrams.csv",
     "predictions_LR_unigramsandbigrams.csv",
     #"predictions_CT_unigrams.csv",

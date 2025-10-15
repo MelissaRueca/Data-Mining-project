@@ -61,7 +61,7 @@ def mcnemar_all(file_list):
 files = [
 
     #"predictions_MNB_unigrams.csv",
-    #"predictions_MNB_unigramsandbigrams.csv", 
+    "predictions_MNB_unigramsandbigrams.csv", 
     #"predictions_LR_unigrams.csv",
     "predictions_LR_unigramsandbigrams.csv",
     #"predictions_CT_unigrams.csv",

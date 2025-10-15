@@ -98,7 +98,7 @@ if __name__ == "__main__":
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,1),
-        name="Logistic_Regression_Unigram"
+        name="LR_unigrams"
     )
 
     # Run the function for unigrams + bigrams
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,2),
-        name="Logistic_Regression_Bigram"
+        name="LR_unigramsandbigrams"
     )
 
     print("\n--- Final Comparison ---")

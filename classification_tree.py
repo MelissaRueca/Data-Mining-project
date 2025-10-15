@@ -65,6 +65,15 @@ def decision_tree_pipeline(train_text, train_y, test_text, test_y, ngram_range=(
     print("\nClassification Report:\n", classification_report(test_y, y_pred))
     print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
 
+    # ...existing code...
+    # Save true labels, predicted labels, and text to CSV
+    pd.DataFrame({
+        "text": test_text,
+        "true_label": test_y,
+        "predicted_label": y_pred
+    }).to_csv(f"predictions_{name.replace(' ', '_')}.csv", index=False)
+# ...existing code...
+
     ngram_label = "Unigram" if ngram_range == (1,1) else "Unigram+Bigram"
     plot_confusion_matrix(test_y, y_pred,
                           labels=("truthful", "deceptive"),
@@ -92,7 +101,7 @@ if __name__ == "__main__":
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,1),
-        name="Unigram TF-IDF"
+        name="Classification_Tree_UnigramF"
     )
 
     #Run Decision Tree with Unigrams + Bigrams 
@@ -100,7 +109,7 @@ if __name__ == "__main__":
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,2),
-        name="Unigram+Bigram TF-IDF"
+        name="Classification_Tree_Unigram+Bigram"
     )
 
     print("\n--- Decision Tree: Final Comparison ---")

@@ -59,6 +59,12 @@ def logistic_regression_pipeline(train_text, train_y, test_text, test_y, ngram_r
     print("\nClassification Report:\n", classification_report(test_y, y_pred))
     print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
 
+    pd.DataFrame({
+        "text": test_text,
+        "true_label": test_y,
+        "predicted_label": y_pred
+    }).to_csv(f"predictions_{name.replace(' ', '_')}.csv", index=False)
+
     ngram_label = "Unigram" if ngram_range == (1,1) else "Unigram+Bigram"
     plot_confusion_matrix(test_y, y_pred,labels=("truthful", "deceptive"),
                            model_name="Logistic Regression",ngram_label=ngram_label)
@@ -92,7 +98,7 @@ if __name__ == "__main__":
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,1),
-        name="Unigram TF-IDF"
+        name="Logistic_Regression_Unigram"
     )
 
     # Run the function for unigrams + bigrams
@@ -100,7 +106,7 @@ if __name__ == "__main__":
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,2),
-        name="Unigram+Bigram TF-IDF"
+        name="Logistic_Regression_Bigram"
     )
 
     print("\n--- Final Comparison ---")
@@ -108,4 +114,4 @@ if __name__ == "__main__":
     print(f"Unigram + Bigram accuracy: {acc_bi:.4f}")
 
     show_top_terms(pipe_uni, top_n=5)
-    show_top_terms(pipe_bi, top_n=5) 
+    show_top_terms(pipe_bi, top_n=5)

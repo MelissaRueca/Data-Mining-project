@@ -58,7 +58,7 @@ def prepare_data():
     deceptive_df = load_reviews("negative_polarity/deceptive_from_MTurk", "deceptive") 
     df = pd.concat([truthful_df, deceptive_df], ignore_index=True)
 
-    # Apply preprocessing
+    # Apply preprocessin
     df["clean_text"] = df["text"].apply(preprocess_text)
 
     # Split folds 1-4 for training and fold 5 for testing

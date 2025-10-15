@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # Load data
     train_df, test_df, y_train, y_test = prepare_data()
 
-    # --- Run Decision Tree with Unigrams ---
+    # Run Decision Tree with Unigrams 
     acc_tree_uni, params_tree_uni, pipe_tree_uni = decision_tree_pipeline(
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         name="Unigram TF-IDF"
     )
 
-    # --- Run Decision Tree with Unigrams + Bigrams ---
+    #Run Decision Tree with Unigrams + Bigrams 
     acc_tree_bi, params_tree_bi, pipe_tree_bi = decision_tree_pipeline(
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,

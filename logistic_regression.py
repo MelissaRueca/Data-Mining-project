@@ -108,4 +108,4 @@ if __name__ == "__main__":
     print(f"Unigram + Bigram accuracy: {acc_bi:.4f}")
 
     show_top_terms(pipe_uni, top_n=5)
-    show_top_terms(pipe_bi, top_n=5)
+    show_top_terms(pipe_bi, top_n=5) 

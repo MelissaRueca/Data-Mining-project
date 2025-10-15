@@ -125,9 +125,16 @@ top_k_truthful_bi = np.argsort(-log_prob_diff_bi)[-5:][::-1]
 print("Top 5 features for deceptive reviews:", feature_names_bi[top_k_deceptive_bi])
 print("Top 5 features for truthful reviews:", feature_names_bi[top_k_truthful_bi])
 
-# Save predictions
-with open("pred_naive_bayes_unigrams.pkl", "wb") as f:
-    pickle.dump(y_pred_uni, f)
-    
-with open("pred_naive_bayes_bigrams.pkl", "wb") as f:
-    pickle.dump(y_pred_bi, f)
+#Save preditcions for unigrams 
+pd.DataFrame({
+    "text": test_df["clean_text"],
+    "true_label": y_test,
+    "predicted_label": y_pred_uni
+}).to_csv("predictions_MNB_unigrams.csv", index=False)
+
+#Save predictions for unigrams + bigrams 
+pd.DataFrame({
+    "text": test_df["clean_text"],
+    "true_label": y_test,
+    "predicted_label": y_pred_bi
+}).to_csv("predictions_MNB_unigramsandbigrams.csv", index=False)

@@ -76,6 +76,14 @@ for feat_name, X_train, X_test, vectorizer in feature_sets:
     print("Random Forest --- ", feat_name)
     print("Best params:", best_params)
     print("Metrics:", metrics)
+
+    y_pred = best_model.predict(X_test)
+    test_text = test_df["clean_text"].values
+    pd.DataFrame({
+        "text": test_text,
+        "true_label": le.inverse_transform(y_test),
+        "predicted_label": le.inverse_transform(y_pred)
+    }).to_csv(f"predictions_rf_{feat_name.replace(' ', '_')}.csv", index=False)
     
     model_filename = f"rf_{feat_name}.pkl"
     joblib.dump(best_model, model_filename)

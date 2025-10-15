@@ -43,8 +43,8 @@ param_dist = {
 }
 
 feature_sets = [
-    ("Uni", X_train_uni, X_test_uni, tfidf_uni),
-    ("Uni+Bi", X_train_bi, X_test_bi, tfidf_bi)
+    ("unigrams", X_train_uni, X_test_uni, tfidf_uni),
+    ("unigramsandbigrams", X_train_bi, X_test_bi, tfidf_bi)
 ]
 
 #Hyperparameter search function with cross validation
@@ -83,7 +83,7 @@ for feat_name, X_train, X_test, vectorizer in feature_sets:
         "text": test_text,
         "true_label": le.inverse_transform(y_test),
         "predicted_label": le.inverse_transform(y_pred)
-    }).to_csv(f"predictions_rf_{feat_name.replace(' ', '_')}.csv", index=False)
+    }).to_csv(f"predictions_RF_{feat_name.replace(' ', '_')}.csv", index=False)
     
     model_filename = f"rf_{feat_name}.pkl"
     joblib.dump(best_model, model_filename)

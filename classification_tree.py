@@ -101,7 +101,7 @@ if __name__ == "__main__":
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,1),
-        name="Classification_Tree_UnigramF"
+        name="Classification_Tree_Unigram"
     )
 
     #Run Decision Tree with Unigrams + Bigrams 

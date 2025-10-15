@@ -5,6 +5,7 @@ from itertools import combinations
 def cochrans_q_with_pairwise_mcnemar(csv_files, model_names=None):
     """
     Cochran's Q test for multiple classifiers, followed by pairwise McNemar if significant.
+    Handles cases with no discordant pairs to avoid warnings.
     """
     # Load CSVs
     dfs = [pd.read_csv(f) for f in csv_files]
@@ -45,9 +46,16 @@ def cochrans_q_with_pairwise_mcnemar(csv_files, model_names=None):
         pairs = combinations(correct_df.columns, 2)
         for a, b in pairs:
             table = pd.crosstab(correct_df[a], correct_df[b])
-            mcnemar_result = mcnemar(table, exact=False, correction=True)
-            sig = "✅" if mcnemar_result.pvalue < 0.05 else "❌"
-            print(f"{a} vs {b}: chi2={mcnemar_result.statistic:.4f}, p={mcnemar_result.pvalue:.4f} {sig}")
+            # Count discordant pairs
+            n1 = table.loc[True, False] if (True in table.index and False in table.columns) else 0
+            n2 = table.loc[False, True] if (False in table.index and True in table.columns) else 0
+
+            if n1 + n2 == 0:
+                print(f"{a} vs {b}: no discordant pairs, test not applicable ❌")
+            else:
+                mcnemar_result = mcnemar(table, exact=False, correction=True)
+                sig = "✅" if mcnemar_result.pvalue < 0.05 else "❌"
+                print(f"{a} vs {b}: chi2={mcnemar_result.statistic:.4f}, p={mcnemar_result.pvalue:.4f} {sig}")
     else:
         print("\n❌ No significant differences detected among models.")
 

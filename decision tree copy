@@ -1,0 +1,208 @@
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import StratifiedKFold
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegressionCV, LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import numpy as np
+import os
+import pandas as pd
+import re
+import string
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+
+# Download required NLTK data
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('punkt', quiet=True)
+nltk.download('punkt_tab', quiet=True) 
+
+# Load reviews
+def load_reviews(path, label):
+    """
+    Load reviews from fold directories and assign labels.
+    """
+    data = []
+    for fold in range(1,6):
+        folder = path + f"/fold{fold}"
+        for file in os.listdir(folder):
+            with open(os.path.join(folder, file), "r", encoding="utf-8") as f:
+                text = f.read().strip()
+                data.append({
+                    "text": text,
+                    "label": label,
+                    "fold": fold
+                })
+    return pd.DataFrame(data)
+
+# Load and merge datasets 
+truthful_df = load_reviews("negative_polarity/truthful_from_Web", "truthful") 
+deceptive_df = load_reviews("negative_polarity/deceptive_from_MTurk", "deceptive") 
+df = pd.concat([truthful_df, deceptive_df], ignore_index=True) 
+
+# Keep negations
+stop_words = set(stopwords.words('english')) 
+stop_words.discard('not') 
+stop_words.discard('no')
+stop_words.discard("n't") 
+
+lemmatizer = WordNetLemmatizer()
+
+def preprocess_text(text):
+    """
+    Preprocessing Text :
+    1. Convert to Lowercase
+    2. Removes HTML tags
+    3. Removes punctuation and digits
+    4. Tokenization
+    5. Stopword removal (keeping negations)
+    6. Lemmatization
+    """
+    text = text.lower()
+    text = re.sub(r'<.*?>', '', text)
+    text = text.translate(str.maketrans('', '', string.punctuation + string.digits))
+    tokens = nltk.word_tokenize(text)
+    tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
+    return " ".join(tokens)
+
+# Apply preprocessing 
+df["clean_text"] = df["text"].apply(preprocess_text)
+
+# Split folds 1-4 for training and fold 5 for testing
+train_df = df[df["fold"] != 5]
+test_df = df[df["fold"] == 5]
+
+# Extract labels
+y_train = train_df["label"]
+y_test = test_df["label"]
+
+
+def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), model_name="Logistic Regression", ngram_label="Unigram"):
+    """
+    Display a count-based confusion matrix with a clear title like:
+    'Logistic Regression - Unigram' or 'Logistic Regression - Unigram+Bigram'.
+    """
+    cm = confusion_matrix(y_true, y_pred, labels=list(labels))
+
+    plt.figure(figsize=(5, 4))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+                xticklabels=labels, yticklabels=labels, cbar=False)
+
+    plt.title(f"{model_name} - {ngram_label}", fontsize=13, fontweight="bold")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.tight_layout()
+    plt.show()
+
+
+# --- Single Classification Trees with cost-complexity pruning (ccp_alpha) ---
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, make_scorer
+
+def decision_tree_pipeline(train_text, train_y, test_text, test_y, ngram_range=(1,1), name="Unigrams"):
+    print(f"\n=== Decision Tree :: {name} (ngrams={ngram_range}) ===")
+
+    # 5-fold CV on the training data (folds 1–4)
+    inner_cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
+
+    pipe = Pipeline([
+        ("tfidf", TfidfVectorizer(
+            max_df=0.95,
+            min_df=2,
+            ngram_range=ngram_range,
+            max_features=1000,
+            lowercase=False
+        )),
+        ("tree", DecisionTreeClassifier(
+            random_state=42
+        ))
+    ])
+
+    # Primary hyperparameter: cost-complexity pruning alpha (ccp_alpha)
+    # You can widen/narrow this grid if you see under/overfitting.
+    param_grid = {
+        "tree__ccp_alpha": np.linspace(0.0, 0.05, 20),   # 0.000, 0.001, ..., 0.020
+        "tree__max_depth": [None, 10, 20, 30]
+    }
+
+    # Optimize F1 for the positive class "deceptive"
+    scorer = make_scorer(f1_score, pos_label="deceptive")
+
+    grid = GridSearchCV(
+        pipe, param_grid=param_grid,
+        scoring=scorer, cv=inner_cv, n_jobs=-1, refit=True, verbose=0
+    )
+
+    grid.fit(train_text, train_y)
+
+    # Best model and its hyperparameters
+    best_pipe = grid.best_estimator_
+    best_params = grid.best_params_
+    best_alpha = best_params.get("tree__ccp_alpha", None)
+    print("Best params:", best_params)
+    if best_alpha is not None:
+        print("Best ccp_alpha (CP):", best_alpha)
+
+    # Evaluate on the untouched test fold (fold 5)
+    y_pred = best_pipe.predict(test_text)
+    acc = accuracy_score(test_y, y_pred)
+    print("Test Accuracy:", round(acc, 4))
+    print("\nClassification Report:\n", classification_report(test_y, y_pred))
+    print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
+
+    ngram_label = "Unigram" if ngram_range == (1,1) else "Unigram+Bigram"
+    plot_confusion_matrix(test_y, y_pred,
+                          labels=("truthful", "deceptive"),
+                          model_name="Decision Tree",
+                          ngram_label=ngram_label)
+
+    return acc, best_params, best_pipe
+
+
+# --- Run Decision Tree with Unigrams ---
+acc_tree_uni, params_tree_uni, pipe_tree_uni = decision_tree_pipeline(
+    train_df["clean_text"], y_train,
+    test_df["clean_text"], y_test,
+    ngram_range=(1,1),
+    name="Unigram TF-IDF"
+)
+
+# --- Run Decision Tree with Unigrams + Bigrams ---
+acc_tree_bi, params_tree_bi, pipe_tree_bi = decision_tree_pipeline(
+    train_df["clean_text"], y_train,
+    test_df["clean_text"], y_test,
+    ngram_range=(1,2),
+    name="Unigram+Bigram TF-IDF"
+)
+
+print("\n--- Decision Tree: Final Comparison ---")
+print(f"Unigram accuracy         : {acc_tree_uni:.4f}")
+print(f"Unigram + Bigram accuracy: {acc_tree_bi:.4f}")
+
+
+# (Optional) Show most important features overall for a fitted tree (no directionality)
+def show_tree_feature_importance(pipe, top_n=15):
+    """
+    For DecisionTreeClassifier: lists the top-n features by impurity-based importance.
+    Note: tree importances are unsigned, so they don't indicate *which* class a feature favors.
+    """
+    vectorizer = pipe.named_steps["tfidf"]
+    tree = pipe.named_steps["tree"]
+    feature_names = np.array(vectorizer.get_feature_names_out())
+    importances = tree.feature_importances_
+
+    idx = np.argsort(importances)[-top_n:][::-1]
+    print(f"\nTop {top_n} features by importance (Decision Tree):")
+    for i in idx:
+        print(f"{feature_names[i]:<25} {importances[i]:.4f}")
+
+
+show_tree_feature_importance(pipe_tree_uni, top_n=5)
+show_tree_feature_importance(pipe_tree_bi, top_n=5)

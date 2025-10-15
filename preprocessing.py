@@ -37,7 +37,7 @@ truthful_df = load_reviews("negative_polarity/truthful_from_Web", "truthful")
 deceptive_df = load_reviews("negative_polarity/deceptive_from_MTurk", "deceptive") 
 df = pd.concat([truthful_df, deceptive_df], ignore_index=True) 
 
-# Configure stopwords (keep negations)
+# Keep negations
 stop_words = set(stopwords.words('english')) 
 stop_words.discard('not') 
 stop_words.discard('no')
@@ -66,8 +66,8 @@ def preprocess_text(text):
 df["clean_text"] = df["text"].apply(preprocess_text)
 
 # Split folds 1-4 for training and fold 5 for testing
-train_df = df[df["fold"] < 5].reset_index(drop=True) 
-test_df  = df[df["fold"] == 5].reset_index(drop=True) 
+train_df = df[df["fold"] != 5]
+test_df = df[df["fold"] == 5]
 
 # Extract labels
 y_train = train_df["label"]
@@ -75,7 +75,7 @@ y_test = test_df["label"]
 
 # Feature extraction
 
-# UNIGRAMS 
+# Unigrams (single words)
 tfidf_uni = TfidfVectorizer(
         max_df=0.95,  # exclude terms that appear in >95% of documents
         min_df=2, # exclude terms that appear <2 documents
@@ -86,7 +86,7 @@ tfidf_uni = TfidfVectorizer(
 X_train_uni = tfidf_uni.fit_transform(train_df["clean_text"])
 X_test_uni= tfidf_uni.transform(test_df["clean_text"]) 
 
-# UNIGRAMS + BIGRAMS
+# Unigrams + bigrams (single + two-word phrases)
 tfidf_bi = TfidfVectorizer(
         max_df=0.95,
         min_df=2,
@@ -97,15 +97,16 @@ tfidf_bi = TfidfVectorizer(
 X_train_bi = tfidf_bi.fit_transform(train_df["clean_text"])
 X_test_bi = tfidf_bi.transform(test_df["clean_text"])
 
-# Save processed Data
+# Save processed data
 df.to_csv("processed_reviews.csv", index=False) 
 train_df.to_csv("train_reviews.csv", index=False)
 test_df.to_csv("test_reviews.csv", index=False)
 
-# Save Vectorizers 
+# Save vectorizers 
 with open("tfidf_uni.pkl", "wb") as f:
     pickle.dump(tfidf_uni, f)
 with open("tfidf_bi.pkl", "wb") as f:
     pickle.dump(tfidf_bi, f)
 
 print("Data preprocessing complete.")
+

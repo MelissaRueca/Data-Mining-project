@@ -44,7 +44,7 @@ param_grid_uni = {
     'nb__alpha': [0.01, 0.1, 0.5, 1.0]
 }
 
-grid_uni = GridSearchCV(pipe_uni, param_grid_uni, cv=10, n_jobs=-1)
+grid_uni = GridSearchCV(pipe_uni, param_grid_uni, cv=5, n_jobs=-1)
 grid_uni.fit(train_df["clean_text"], y_train)
 
 print("Best parameters:", grid_uni.best_params_)
@@ -101,7 +101,7 @@ param_grid_bi = {
     'nb__alpha': [0.01, 0.1, 0.5, 1.0]
 }
 
-grid_bi = GridSearchCV(pipe_bi, param_grid_bi, cv=10, n_jobs=-1)
+grid_bi = GridSearchCV(pipe_bi, param_grid_bi, cv=5, n_jobs=-1)
 grid_bi.fit(train_df["clean_text"], y_train)
 
 print("Best parameters:", grid_bi.best_params_)

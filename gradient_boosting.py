@@ -1,96 +1,144 @@
-import joblib
-import pandas as pd
-import pickle
-from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
-from sklearn.preprocessing import LabelEncoder
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV
 import numpy as np
-import random
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import (
+    accuracy_score, classification_report, confusion_matrix,
+    precision_score, recall_score, f1_score, make_scorer
+)
+import joblib
+from pr import prepare_data
 
-random.seed(42)
-np.random.seed(42)
+def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), model_name="Gradient Boosting", ngram_label="Unigram"):
+    cm = confusion_matrix(y_true, y_pred, labels=list(labels))
+    plt.figure(figsize=(5, 4))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Greens",
+                xticklabels=labels, yticklabels=labels, cbar=False)
+    plt.title(f"{model_name} - {ngram_label}", fontsize=13, fontweight="bold")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.tight_layout()
+    plt.show()
 
-#Load data and vectorizers
-train_df = pd.read_csv("train_reviews.csv")
-test_df = pd.read_csv("test_reviews.csv")
+def show_gb_feature_importance(pipe, top_n=5):
+    """
+    Mostra le top-N feature più importanti per Gradient Boosting.
+    """
+    vectorizer = pipe.named_steps["tfidf"]
+    gb = pipe.named_steps["gb"]
+    feature_names = np.array(vectorizer.get_feature_names_out())
+    importances = gb.feature_importances_
+    idx = np.argsort(importances)[-top_n:][::-1]
 
-with open("tfidf_uni.pkl", "rb") as f:
-    tfidf_uni = pickle.load(f)
-with open("tfidf_bi.pkl", "rb") as f:
-    tfidf_bi = pickle.load(f)
+    print(f"\nTop {top_n} features by importance (Gradient Boosting):")
+    for i in idx:
+        print(f"{feature_names[i]:<25} {importances[i]:.4f}")
 
-#Label encoding
-le = LabelEncoder()
-y_train = le.fit_transform(train_df["label"])
-y_test = le.transform(test_df["label"])
+def gradient_boosting_pipeline(train_text, train_y, test_text, test_y, ngram_range=(1,1), name="Unigrams"):
+    print(f"\n=== Gradient Boosting :: {name} (ngrams={ngram_range}) ===")
 
-#TF-IDF transformations
-X_train_uni = tfidf_uni.transform(train_df["clean_text"].values)
-X_test_uni  = tfidf_uni.transform(test_df["clean_text"].values)
-X_train_bi  = tfidf_bi.transform(train_df["clean_text"].values)
-X_test_bi   = tfidf_bi.transform(test_df["clean_text"].values)
+    le = LabelEncoder()
+    y_train_enc = le.fit_transform(train_y)
+    y_test_enc = le.transform(test_y)
 
-#Model and hyperparameters
-model = GradientBoostingClassifier(random_state=42)
-param_dist = {
-    'n_estimators': [200, 300],
-    'max_depth': [3, 5],
-    'learning_rate': [0.05, 0.1],
-    'subsample': [0.7, 0.85],
-    'max_features': ['sqrt', 'log2']
-}
+    inner_cv = StratifiedKFold(n_splits=8, shuffle=True, random_state=42)
 
-feature_sets = [
-    ("unigrams", X_train_uni, X_test_uni, tfidf_uni),
-    ("unigramsandbigrams", X_train_bi, X_test_bi, tfidf_bi)
-]
+    pipe = Pipeline([
+        ("tfidf", TfidfVectorizer(
+            max_df=0.95,
+            min_df=2,
+            ngram_range=ngram_range,
+            lowercase=False
+        )),
+        ("gb", GradientBoostingClassifier(random_state=42))
+    ])
 
-#Hyperparameter search function with cross validation
-def search_best_model(model, param_dist, X_train, y_train):
-    cv = StratifiedKFold(n_splits=8, shuffle=True, random_state=42)
-    search = RandomizedSearchCV(model, param_distributions=param_dist, n_iter=20,
-                                cv=cv, scoring="f1", n_jobs=-1, random_state=42)
-    search.fit(X_train, y_train)
-    return search.best_estimator_, search.best_params_
-
-#Model performance evaluation
-def evaluate_model(model, X_test, y_test):
-    y_pred = model.predict(X_test)
-    return {
-        "Accuracy": accuracy_score(y_test, y_pred),
-        "Precision": precision_score(y_test, y_pred),
-        "Recall": recall_score(y_test, y_pred),
-        "F1-score": f1_score(y_test, y_pred)
+    param_dist = {
+        "tfidf__max_features": [2000, 5000, 8000] if ngram_range == (1,1) else [5000, 8000, 12000],
+        "gb__n_estimators": [200, 300],
+        "gb__max_depth": [3, 5],
+        "gb__learning_rate": [0.05, 0.1],
+        "gb__subsample": [0.7, 0.85],
+        "gb__max_features": ["sqrt", "log2"]
     }
 
-#Training and evaluation
-all_results = []
-for feat_name, X_train, X_test, vectorizer in feature_sets:
-    best_model, best_params = search_best_model(model, param_dist, X_train, y_train)
-    best_model.fit(X_train, y_train)
-    metrics = evaluate_model(best_model, X_test, y_test)
-    
-    print("Gradient Boosting ---- ", feat_name)
-    print("Best params:", best_params)
-    print("Metrics:", metrics)
+    scorer = make_scorer(f1_score)
 
-    y_pred = best_model.predict(X_test)
-    test_text = test_df["clean_text"].values
+    search = RandomizedSearchCV(
+        pipe,
+        param_distributions=param_dist,
+        n_iter=20,
+        scoring=scorer,
+        cv=inner_cv,
+        n_jobs=-1,
+        random_state=42,
+        verbose=0
+    )
+
+    search.fit(train_text, y_train_enc)
+
+    best_pipe = search.best_estimator_
+    best_params = search.best_params_
+    print("Best params:", best_params)
+
+    y_pred_enc = best_pipe.predict(test_text)
+    y_pred = le.inverse_transform(y_pred_enc)
+
+    acc = accuracy_score(y_test_enc, y_pred_enc)
+    prec = precision_score(y_test_enc, y_pred_enc)
+    rec = recall_score(y_test_enc, y_pred_enc)
+    f1 = f1_score(y_test_enc, y_pred_enc)
+
+    print(f"Test Accuracy: {acc:.4f}")
+    print(f"Precision    : {prec:.4f}")
+    print(f"Recall       : {rec:.4f}")
+    print(f"F1-score     : {f1:.4f}")
+
+    print("\nClassification Report:\n", classification_report(test_y, y_pred))
+    print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
+
     pd.DataFrame({
         "text": test_text,
-        "true_label": le.inverse_transform(y_test),
-        "predicted_label": le.inverse_transform(y_pred)
-    }).to_csv(f"predictions_GB_{feat_name.replace(' ', '_')}.csv", index=False)
-    
-    model_filename = f"gb_{feat_name}.pkl"
-    joblib.dump(best_model, model_filename)
-    
-    all_results.append({"Model": "Gradient Boosting", "Features": feat_name, **metrics})
+        "true_label": test_y,
+        "predicted_label": y_pred
+    }).to_csv(f"predictions_GB_{name.replace(' ', '_')}.csv", index=False)
 
-results_df = pd.DataFrame(all_results)
-print("\n---Performance summary---")
-print(results_df)
-results_df.to_csv("gb_results.csv", index=False)
+    joblib.dump(best_pipe, f"gb_{name.replace(' ', '_')}.pkl")
 
+    ngram_label = "Unigram" if ngram_range == (1,1) else "Unigram+Bigram"
+    plot_confusion_matrix(test_y, y_pred,
+                          labels=("truthful", "deceptive"),
+                          model_name="Gradient Boosting",
+                          ngram_label=ngram_label)
 
+    return acc, best_params, best_pipe
+
+if __name__ == "__main__":
+ 
+    train_df, test_df, y_train, y_test = prepare_data()
+
+    acc_gb_uni, params_gb_uni, pipe_gb_uni = gradient_boosting_pipeline(
+        train_df["clean_text"], y_train,
+        test_df["clean_text"], y_test,
+        ngram_range=(1,1),
+        name="GB_unigrams"
+    )
+
+    acc_gb_bi, params_gb_bi, pipe_gb_bi = gradient_boosting_pipeline(
+        train_df["clean_text"], y_train,
+        test_df["clean_text"], y_test,
+        ngram_range=(1,2),
+        name="GB_unigramsandbigrams"
+    )
+
+    show_gb_feature_importance(pipe_gb_uni, top_n=5)
+    show_gb_feature_importance(pipe_gb_bi, top_n=5)
+
+    print("\n--- Gradient Boosting: Final Comparison ---")
+    print(f"Unigram accuracy         : {acc_gb_uni:.4f}")
+    print(f"Unigram + Bigram accuracy: {acc_gb_bi:.4f}")

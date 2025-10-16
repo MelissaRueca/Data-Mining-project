@@ -4,13 +4,28 @@ from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report, confusion_matrix
 from sklearn.feature_extraction.text import TfidfVectorizer
 from pr import prepare_data  
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 #  Load and preprocess data
 train_df, test_df, y_train, y_test = prepare_data()
 
+def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), model_name="Multinomial Naive Bayes", ngram_label="Unigram"):
+    """
+    Plots a confusion matrix for a given model’s predictions.
+    """
+    cm = confusion_matrix(y_true, y_pred, labels=list(labels))
+    plt.figure(figsize=(5, 4))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+                xticklabels=labels, yticklabels=labels, cbar=False)
+    plt.title(f"{model_name} - {ngram_label}", fontsize=13, fontweight="bold")
+    plt.xlabel("Predicted")
+    plt.ylabel("True Label")
+    plt.tight_layout()
+    plt.show()
 
 #  Multinomial Naive Bayes - Unigrams
 
@@ -41,6 +56,13 @@ print("Precision:", precision_score(y_test, y_pred_uni, pos_label='deceptive'))
 print("Recall:", recall_score(y_test, y_pred_uni, pos_label='deceptive'))
 print("F1-score:", f1_score(y_test, y_pred_uni,pos_label='deceptive'))
 print("Classification Report:\n", classification_report(y_test, y_pred_uni))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_uni))
+
+# Plot confusion matrix for Unigram model
+plot_confusion_matrix(y_test, y_pred_uni, 
+                      labels=("truthful", "deceptive"),
+                      model_name="Multinomial Naive Bayes",
+                      ngram_label="Unigram")
 
 # Top 5 features - Unigrams
 
@@ -74,7 +96,7 @@ pipe_bi = Pipeline([
 
 
 param_grid_bi = {
-    'tfidf__max_features': [5000, 8000, 10000,120000],
+    'tfidf__max_features': [5000, 8000, 10000,12000],
     'select__k': [1000, 2000, 3000, 5000],  
     'nb__alpha': [0.01, 0.1, 0.5, 1.0]
 }
@@ -91,6 +113,13 @@ print("Precision:", precision_score(y_test, y_pred_bi, pos_label='deceptive'))
 print("Recall:", recall_score(y_test, y_pred_bi,pos_label='deceptive'))
 print("F1-score:", f1_score(y_test, y_pred_bi, pos_label='deceptive'))
 print("Classification Report:\n", classification_report(y_test, y_pred_bi))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_bi))
+
+# Plot confusion matrix for Unigram + Bigram model
+plot_confusion_matrix(y_test, y_pred_bi, 
+                      labels=("truthful", "deceptive"),
+                      model_name="Multinomial Naive Bayes",
+                      ngram_label="Unigram + Bigram")
 
 # Top 5 features - Unigrams + Bigrams
 

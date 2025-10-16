@@ -5,9 +5,11 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import StratifiedKFold, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 import joblib
-from pr import prepare_data  # Use your preprocessing function
+from pr import prepare_data  
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 #  Load data 
 train_df, test_df, y_train, y_test = prepare_data()
@@ -17,7 +19,20 @@ le = LabelEncoder()
 y_train_enc = le.fit_transform(y_train)
 y_test_enc  = le.transform(y_test)
 
-
+def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), model_name="Gradient Boosting", ngram_label="Unigram"):
+    """
+    Plots a confusion matrix for a given model’s predictions.
+    """
+    cm = confusion_matrix(y_true, y_pred, labels=list(labels))
+    plt.figure(figsize=(5, 4))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+                xticklabels=labels, yticklabels=labels, cbar=False)
+    plt.title(f"{model_name} - {ngram_label}", fontsize=13, fontweight="bold")
+    plt.xlabel("Predicted")
+    plt.ylabel("True Label")
+    plt.tight_layout()
+    plt.show()
+    
 #  Feature sets and pipelines
 feature_sets = [
     ("unigrams", (1,1)),
@@ -70,7 +85,13 @@ for feat_name, ngram_range in feature_sets:
         "F1-score": f1_score(y_test_enc, y_pred_enc)
     }
     print("Metrics:", metrics)
-
+    # Decode predictions back to original labels for plotting
+    y_pred_labels = le.inverse_transform(y_pred_enc)
+    # Plot confusion matrix (using original string labels)
+    plot_confusion_matrix(y_test, y_pred_labels,
+                        labels=("truthful", "deceptive"),
+                        model_name="Gradient Boosting",
+                        ngram_label=feat_name)
     # Save predictions
     pd.DataFrame({
         "text": test_df["clean_text"],

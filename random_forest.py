@@ -90,15 +90,6 @@ def random_forest_pipeline(train_text, train_y, test_text, test_y, ngram_range=(
 
     return acc, best_params, best_pipe
 
-def show_rf_feature_importance(pipe, top_n=15):
-    vectorizer = pipe.named_steps["tfidf"]
-    rf = pipe.named_steps["rf"]
-    feature_names = np.array(vectorizer.get_feature_names_out())
-    importances = rf.feature_importances_
-    idx = np.argsort(importances)[-top_n:][::-1]
-    print(f"\nTop {top_n} features by importance (Random Forest):")
-    for i in idx:
-        print(f"{feature_names[i]:<25} {importances[i]:.4f}")
 
 if __name__ == "__main__":
     # Load data
@@ -120,8 +111,6 @@ if __name__ == "__main__":
         name="RF_unigramsandbigrams"
     )
 
-    show_rf_feature_importance(pipe_rf_uni, top_n=5)
-    show_rf_feature_importance(pipe_rf_bi, top_n=5)
 
     print("\n--- Random Forest: Final Comparison ---")
     print(f"Unigram accuracy         : {acc_rf_uni:.4f}")

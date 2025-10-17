@@ -85,4 +85,7 @@ files = [
     #"predictions_GB_unigram.csv",
     "predictions_GB_unigramandbigram.csv"
 ]
+
+if __name__ == "__main__":
+    mcnemar_heatmap(files, display_names=labels)
 #mcnemar_heatmap(files, display_names=labels)

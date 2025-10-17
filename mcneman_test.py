@@ -72,3 +72,6 @@ files = [
     "predictions_GB_unigramandbigram.csv"
 ]
 #mcnemar_all(files)
+
+if __name__ == "__main__":
+    mcnemar_all(files)

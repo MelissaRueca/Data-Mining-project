@@ -7,26 +7,26 @@ def mcnemar_test(csv1, csv2):
     Both CSVs must have columns: 'text', 'true_label', and 'predicted_label'.
     """
 
-    # Load CSVs
+    #Load CSVs
     a = pd.read_csv(csv1)
     b = pd.read_csv(csv2)
 
-    # Merge on text + true_label (only matching rows)
+    #Merge on text + true_label (only matching rows)
     merged = pd.merge(a, b, on=["text", "true_label"], suffixes=("_a", "_b"))
 
-    # Check correctness for each model
+    #Check correctness for each model
     merged["a_correct"] = merged["predicted_label_a"] == merged["true_label"]
     merged["b_correct"] = merged["predicted_label_b"] == merged["true_label"]
 
-    # Discordant pairs
+    #Discordant pairs
     n01 = ((~merged["a_correct"]) & (merged["b_correct"])).sum()  # A wrong, B right
     n10 = ((merged["a_correct"]) & (~merged["b_correct"])).sum()  # A right, B wrong
 
-    # McNemar’s test
+    #McNemar’s test
     table = [[0, n01], [n10, 0]]
     result = mcnemar(table, exact=False, correction=True)
 
-    # Results
+    #Results
     print("\nMcNemar's Test Results:")
     print(f"n01 (A wrong, B right): {n01}")
     print(f"n10 (A right, B wrong): {n10}")
@@ -38,7 +38,7 @@ def mcnemar_test(csv1, csv2):
     else:
         print("\n❌ No significant difference (p ≥ 0.05).")
 
-# Example usage:
+#Example usage:
 #mcnemar_test("predictions_Logistic_Regression_Unigram.csv", "predictions_Classification_Tree_UnigramF.csv")
 
 

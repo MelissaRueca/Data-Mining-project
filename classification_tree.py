@@ -7,7 +7,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, make_scorer
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, make_scorer, precision_score, recall_score
 
 from pr import prepare_data
 
@@ -60,7 +60,14 @@ def decision_tree_pipeline(train_text, train_y, test_text, test_y, ngram_range=(
 
     y_pred = best_pipe.predict(test_text)
     acc = accuracy_score(test_y, y_pred)
-    print("Test Accuracy:", round(acc, 4))
+    prec = precision_score(test_y, y_pred, pos_label='deceptive')
+    rec = recall_score(test_y, y_pred, pos_label='deceptive')
+    f1 = f1_score(test_y, y_pred, pos_label='deceptive')
+ 
+    print(f"\nTest Accuracy", round(acc, 4))
+    print(f"Precision    : {round(prec, 4)}")
+    print(f"Recall       : {round(rec, 4)}")
+    print(f"F1-score     : {round(f1, 4)}")
     print("\nClassification Report:\n", classification_report(test_y, y_pred))
     print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
 

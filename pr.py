@@ -1,12 +1,17 @@
 import os
+import random
 import re
 import string
+import numpy as np
 import pandas as pd
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-# Keep negations
+random.seed(42)
+np.random.seed(42)
+
+#Keep negations
 stop_words = set(stopwords.words('english')) 
 stop_words.discard('not') 
 stop_words.discard('no')
@@ -21,7 +26,7 @@ def load_reviews(path, label):
     data = []
     for fold in range(1,6):
         folder = path + f"/fold{fold}"
-        for file in os.listdir(folder):
+        for file in sorted(os.listdir(folder)):
             with open(os.path.join(folder, file), "r", encoding="utf-8") as f:
                 text = f.read().strip()
                 data.append({
@@ -58,14 +63,14 @@ def prepare_data():
     deceptive_df = load_reviews("negative_polarity/deceptive_from_MTurk", "deceptive") 
     df = pd.concat([truthful_df, deceptive_df], ignore_index=True)
 
-    # Apply preprocessin
+    #Apply preprocessin
     df["clean_text"] = df["text"].apply(preprocess_text)
 
-    # Split folds 1-4 for training and fold 5 for testing
+    #Split folds 1-4 for training and fold 5 for testing
     train_df = df[df["fold"] != 5]
     test_df = df[df["fold"] == 5]
 
-    # Extract labels
+    #Extract labels
     y_train = train_df["label"]
     y_test = test_df["label"]
 

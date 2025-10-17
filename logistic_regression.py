@@ -7,7 +7,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegressionCV
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, precision_score, recall_score
 
 from pr import prepare_data
 
@@ -53,6 +53,16 @@ def logistic_regression_pipeline(train_text, train_y, test_text, test_y, ngram_r
 
     y_pred = pipe.predict(test_text)
     acc = accuracy_score(test_y, y_pred)
+    prec = precision_score(test_y, y_pred, pos_label='deceptive')
+    rec = recall_score(test_y, y_pred, pos_label='deceptive')
+    f1 = f1_score(test_y, y_pred, pos_label='deceptive')
+ 
+    print(f"\nTest Accuracy", round(acc, 4))
+    print(f"Precision    : {round(prec, 4)}")
+    print(f"Recall       : {round(rec, 4)}")
+    print(f"F1-score     : {round(f1, 4)}")
+    print("\nClassification Report:\n", classification_report(test_y, y_pred))
+
     print("Test Accuracy:", round(acc, 4))
     print("\nClassification Report:\n", classification_report(test_y, y_pred))
     print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
@@ -88,10 +98,10 @@ def show_top_terms(pipe, top_n=5):
     return pd.DataFrame({"term": feature_names, "coef": coefs}).sort_values("coef", ascending=False)
 
 if __name__ == "__main__":
-    # Load and merge datasets
+    #Load and merge datasets
     train_df, test_df, y_train, y_test = prepare_data()
     
-    # Run the function for unigrams
+    #Run the function for unigrams
     acc_uni, C_uni, pipe_uni = logistic_regression_pipeline(
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
@@ -99,7 +109,7 @@ if __name__ == "__main__":
         name="LR_unigrams"
     )
 
-    # Run the function for unigrams + bigrams
+    #Run the function for unigrams + bigrams
     acc_bi, C_bi, pipe_bi = logistic_regression_pipeline(
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,

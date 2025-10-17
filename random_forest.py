@@ -7,7 +7,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, make_scorer
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score, make_scorer, precision_score, recall_score
 
 from pr import prepare_data
 
@@ -71,11 +71,18 @@ def random_forest_pipeline(train_text, train_y, test_text, test_y, ngram_range=(
 
     y_pred = best_pipe.predict(test_text)
     acc = accuracy_score(test_y, y_pred)
-    print("Test Accuracy:", round(acc, 4))
+    prec = precision_score(test_y, y_pred, pos_label='deceptive')
+    rec = recall_score(test_y, y_pred, pos_label='deceptive')
+    f1 = f1_score(test_y, y_pred, pos_label='deceptive')
+ 
+    print(f"\nTest Accuracy", round(acc, 4))
+    print(f"Precision    : {round(prec, 4)}")
+    print(f"Recall       : {round(rec, 4)}")
+    print(f"F1-score     : {round(f1, 4)}")
     print("\nClassification Report:\n", classification_report(test_y, y_pred))
     print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
 
-    # Save true labels, predicted labels, and text to CSV
+    #Save true labels, predicted labels, and text to CSV
     pd.DataFrame({
         "text": test_text,
         "true_label": test_y,
@@ -92,10 +99,10 @@ def random_forest_pipeline(train_text, train_y, test_text, test_y, ngram_range=(
 
 
 if __name__ == "__main__":
-    # Load data
+    #Load data
     train_df, test_df, y_train, y_test = prepare_data()
 
-    # Run Random Forest with Unigrams 
+    #Run Random Forest with Unigrams 
     acc_rf_uni, params_rf_uni, pipe_rf_uni = random_forest_pipeline(
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
@@ -103,7 +110,7 @@ if __name__ == "__main__":
         name="RF_unigrams"
     )
 
-    # Run Random Forest with Unigrams + Bigrams 
+    #Run Random Forest with Unigrams + Bigrams 
     acc_rf_bi, params_rf_bi, pipe_rf_bi = random_forest_pipeline(
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,

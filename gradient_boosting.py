@@ -25,16 +25,6 @@ def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), mode
     plt.tight_layout()
     plt.show()
 
-def show_gb_feature_importance(pipe, top_n=5):
-    vectorizer = pipe.named_steps["tfidf"]
-    gb = pipe.named_steps["gb"]
-    feature_names = np.array(vectorizer.get_feature_names_out())
-    importances = gb.feature_importances_
-    idx = np.argsort(importances)[-top_n:][::-1]
-
-    print(f"\nTop {top_n} features by importance (Gradient Boosting):")
-    for i in idx:
-        print(f"{feature_names[i]:<25} {importances[i]:.4f}")
 
 def gradient_boosting_pipeline(train_text, train_y, test_text, test_y, ngram_range=(1,1), name="unigrams"):
     le = LabelEncoder()
@@ -127,8 +117,6 @@ if __name__ == "__main__":
         name="unigramsandbigrams"  
     )
 
-    show_gb_feature_importance(pipe_gb_uni, top_n=5)
-    show_gb_feature_importance(pipe_gb_bi, top_n=5)
 
     print("\n--- Gradient Boosting: Final Comparison ---")
     print(f"Unigram accuracy         : {acc_gb_uni:.4f}")

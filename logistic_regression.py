@@ -23,8 +23,6 @@ def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), mode
     plt.show()
 
 def logistic_regression_pipeline(train_text, train_y, test_text, test_y, ngram_range=(1,1), name="Unigrams"):
-    print(f"\n--- {name} (ngrams={ngram_range}) ---")
-
     inner_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
     pipe = Pipeline([

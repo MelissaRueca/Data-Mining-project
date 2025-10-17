@@ -23,8 +23,6 @@ def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), mode
     plt.show()
 
 def random_forest_pipeline(train_text, train_y, test_text, test_y, ngram_range=(1,1), name="Unigrams"):
-    print(f"\\n=== Random Forest :: {name} (ngrams={ngram_range}) ===")
-
     inner_cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
     pipe = Pipeline([
@@ -74,8 +72,8 @@ def random_forest_pipeline(train_text, train_y, test_text, test_y, ngram_range=(
     y_pred = best_pipe.predict(test_text)
     acc = accuracy_score(test_y, y_pred)
     print("Test Accuracy:", round(acc, 4))
-    print("\\nClassification Report:\\n", classification_report(test_y, y_pred))
-    print("Confusion Matrix:\\n", confusion_matrix(test_y, y_pred))
+    print("\nClassification Report:\n", classification_report(test_y, y_pred))
+    print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
 
     # Save true labels, predicted labels, and text to CSV
     pd.DataFrame({
@@ -98,7 +96,7 @@ def show_rf_feature_importance(pipe, top_n=15):
     feature_names = np.array(vectorizer.get_feature_names_out())
     importances = rf.feature_importances_
     idx = np.argsort(importances)[-top_n:][::-1]
-    print(f"\\nTop {top_n} features by importance (Random Forest):")
+    print(f"\nTop {top_n} features by importance (Random Forest):")
     for i in idx:
         print(f"{feature_names[i]:<25} {importances[i]:.4f}")
 
@@ -125,6 +123,6 @@ if __name__ == "__main__":
     show_rf_feature_importance(pipe_rf_uni, top_n=5)
     show_rf_feature_importance(pipe_rf_bi, top_n=5)
 
-    print("\\n--- Random Forest: Final Comparison ---")
+    print("\n--- Random Forest: Final Comparison ---")
     print(f"Unigram accuracy         : {acc_rf_uni:.4f}")
     print(f"Unigram + Bigram accuracy: {acc_rf_bi:.4f}")

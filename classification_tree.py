@@ -23,7 +23,6 @@ def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), mode
     plt.show()
 
 def decision_tree_pipeline(train_text, train_y, test_text, test_y, ngram_range=(1,1), name="Unigrams"):
-    print(f"\n=== Decision Tree :: {name} (ngrams={ngram_range}) ===")
 
     inner_cv = StratifiedKFold(n_splits=10, shuffle=True, random_state=42)
 
@@ -65,14 +64,12 @@ def decision_tree_pipeline(train_text, train_y, test_text, test_y, ngram_range=(
     print("\nClassification Report:\n", classification_report(test_y, y_pred))
     print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
 
-    # ...existing code...
     # Save true labels, predicted labels, and text to CSV
     pd.DataFrame({
         "text": test_text,
         "true_label": test_y,
         "predicted_label": y_pred
     }).to_csv(f"predictions_{name.replace(' ', '_')}.csv", index=False)
-# ...existing code...
 
     ngram_label = "Unigram" if ngram_range == (1,1) else "Unigram+Bigram"
     plot_confusion_matrix(test_y, y_pred,

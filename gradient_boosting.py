@@ -26,9 +26,6 @@ def plot_confusion_matrix(y_true, y_pred, labels=("truthful", "deceptive"), mode
     plt.show()
 
 def show_gb_feature_importance(pipe, top_n=5):
-    """
-    Mostra le top-N feature più importanti per Gradient Boosting.
-    """
     vectorizer = pipe.named_steps["tfidf"]
     gb = pipe.named_steps["gb"]
     feature_names = np.array(vectorizer.get_feature_names_out())
@@ -39,9 +36,7 @@ def show_gb_feature_importance(pipe, top_n=5):
     for i in idx:
         print(f"{feature_names[i]:<25} {importances[i]:.4f}")
 
-def gradient_boosting_pipeline(train_text, train_y, test_text, test_y, ngram_range=(1,1), name="Unigrams"):
-    print(f"\n=== Gradient Boosting :: {name} (ngrams={ngram_range}) ===")
-
+def gradient_boosting_pipeline(train_text, train_y, test_text, test_y, ngram_range=(1,1), name="unigrams"):
     le = LabelEncoder()
     y_train_enc = le.fit_transform(train_y)
     y_test_enc = le.transform(test_y)
@@ -81,7 +76,6 @@ def gradient_boosting_pipeline(train_text, train_y, test_text, test_y, ngram_ran
     )
 
     search.fit(train_text, y_train_enc)
-
     best_pipe = search.best_estimator_
     best_params = search.best_params_
     print("Best params:", best_params)
@@ -89,26 +83,24 @@ def gradient_boosting_pipeline(train_text, train_y, test_text, test_y, ngram_ran
     y_pred_enc = best_pipe.predict(test_text)
     y_pred = le.inverse_transform(y_pred_enc)
 
-    acc = accuracy_score(y_test_enc, y_pred_enc)
-    prec = precision_score(y_test_enc, y_pred_enc)
-    rec = recall_score(y_test_enc, y_pred_enc)
-    f1 = f1_score(y_test_enc, y_pred_enc)
+    acc = accuracy_score(test_y, y_pred)
+    prec = precision_score(test_y, y_pred, pos_label='deceptive')
+    rec = recall_score(test_y, y_pred, pos_label='deceptive')
+    f1 = f1_score(test_y, y_pred, pos_label='deceptive')
 
-    print(f"Test Accuracy: {acc:.4f}")
+    print(f"\nTest Accuracy: {acc:.4f}")
     print(f"Precision    : {prec:.4f}")
     print(f"Recall       : {rec:.4f}")
     print(f"F1-score     : {f1:.4f}")
-
     print("\nClassification Report:\n", classification_report(test_y, y_pred))
-    print("Confusion Matrix:\n", confusion_matrix(test_y, y_pred))
 
     pd.DataFrame({
-        "text": test_text,
-        "true_label": test_y,
-        "predicted_label": y_pred
-    }).to_csv(f"predictions_GB_{name.replace(' ', '_')}.csv", index=False)
+    "text": test_text,
+    "true_label": test_y,
+    "predicted_label": y_pred
+    }).to_csv(f"predictions_{name}.csv", index=False)
 
-    joblib.dump(best_pipe, f"gb_{name.replace(' ', '_')}.pkl")
+    joblib.dump(best_pipe, f"gb_{name}.pkl")
 
     ngram_label = "Unigram" if ngram_range == (1,1) else "Unigram+Bigram"
     plot_confusion_matrix(test_y, y_pred,
@@ -119,21 +111,20 @@ def gradient_boosting_pipeline(train_text, train_y, test_text, test_y, ngram_ran
     return acc, best_params, best_pipe
 
 if __name__ == "__main__":
- 
     train_df, test_df, y_train, y_test = prepare_data()
 
     acc_gb_uni, params_gb_uni, pipe_gb_uni = gradient_boosting_pipeline(
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,1),
-        name="GB_unigrams"
+        name="unigrams"  
     )
 
     acc_gb_bi, params_gb_bi, pipe_gb_bi = gradient_boosting_pipeline(
         train_df["clean_text"], y_train,
         test_df["clean_text"], y_test,
         ngram_range=(1,2),
-        name="GB_unigramsandbigrams"
+        name="unigramsandbigrams"  
     )
 
     show_gb_feature_importance(pipe_gb_uni, top_n=5)
@@ -142,3 +133,4 @@ if __name__ == "__main__":
     print("\n--- Gradient Boosting: Final Comparison ---")
     print(f"Unigram accuracy         : {acc_gb_uni:.4f}")
     print(f"Unigram + Bigram accuracy: {acc_gb_bi:.4f}")
+

@@ -65,6 +65,8 @@ labels = [
     "Logistic Regression (both)",
 
     "Classification Tree (both)",
+    "Random Forest (both)",
+    "Gradient Boosting (both)"
     # add more if you include them in `files`
 ]
 
@@ -72,15 +74,15 @@ labels = [
 
 files = [
 
-    #"predictions_MNB_unigrams.csv",
-    "predictions_MNB_unigramsandbigrams.csv", 
-    #"predictions_LR_unigrams.csv",
-    "predictions_LR_unigramsandbigrams.csv",
-    #"predictions_CT_unigrams.csv",
-    "predictions_CT_unigramsandbigrams.csv", 
-    #"predictions_RF_unigrams.csv",
-    #"predictions_RF_unigramsandbigrams.csv",
-    #"predictions_GB_unigrams.csv",
-    #"predictions_GB_unigramsandbigrams.csv"
+    #"predictions_MNB_unigram.csv",
+    "predictions_MNB_unigramandbigram.csv", 
+    #"predictions_LR_unigram.csv",
+    "predictions_LR_unigramandbigram.csv",
+    #"predictions_CT_unigram.csv",
+    "predictions_CT_unigramandbigram.csv", 
+    #"predictions_RF_unigram.csv",
+    "predictions_RF_unigramandbigram.csv",
+    #"predictions_GB_unigram.csv",
+    "predictions_GB_unigramandbigram.csv"
 ]
-mcnemar_heatmap(files, display_names=labels)
+#mcnemar_heatmap(files, display_names=labels)

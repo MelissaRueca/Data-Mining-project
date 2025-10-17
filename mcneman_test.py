@@ -60,16 +60,15 @@ def mcnemar_all(file_list):
 
 files = [
 
-    #"predictions_MNB_unigrams.csv",
-    "predictions_MNB_unigramsandbigrams.csv", 
-    #"predictions_LR_unigrams.csv",
-    "predictions_LR_unigramsandbigrams.csv",
-    #"predictions_CT_unigrams.csv",
-    "predictions_CT_unigramsandbigrams.csv", 
-    #"predictions_RF_unigrams.csv",
-    #"predictions_RF_unigramsandbigrams.csv",
-    #"predictions_GB_unigrams.csv",
-    #"predictions_GB_unigramsandbigrams.csv"
+    #"predictions_MNB_unigram.csv",
+    "predictions_MNB_unigramandbigram.csv", 
+    #"predictions_LR_unigram.csv",
+    "predictions_LR_unigramandbigram.csv",
+    #"predictions_CT_unigram.csv",
+    "predictions_CT_unigramandbigram.csv", 
+    #"predictions_RF_unigram.csv",
+    "predictions_RF_unigramandbigram.csv",
+    #"predictions_GB_unigram.csv",
+    "predictions_GB_unigramandbigram.csv"
 ]
-
-mcnemar_all(files)
+#mcnemar_all(files)

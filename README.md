@@ -7,7 +7,9 @@ python main.py
 ```
 This script:
 - Preprocesses the dataset  
-- Trains and evaluates all models (Naive Bayes, Logistic Regression, Decision Tree, Random Forest, Gradient Boosting)  
+- Trains and evaluates all models (Naive Bayes, Logistic Regression, Decision Tree, Random Forest, Gradient Boosting)
+- Displays confusion matrices (pop-up windows) for each model
+👉 Close each window to continue execution
 - Saves prediction files (`predictions_*.csv`)  
 - Runs McNemar statistical tests and generates the heatmap comparison  
 

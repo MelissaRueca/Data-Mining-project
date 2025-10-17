@@ -79,15 +79,6 @@ def decision_tree_pipeline(train_text, train_y, test_text, test_y, ngram_range=(
 
     return acc, best_params, best_pipe
 
-def show_tree_feature_importance(pipe, top_n=15):
-    vectorizer = pipe.named_steps["tfidf"]
-    tree = pipe.named_steps["tree"]
-    feature_names = np.array(vectorizer.get_feature_names_out())
-    importances = tree.feature_importances_
-    idx = np.argsort(importances)[-top_n:][::-1]
-    print(f"\nTop {top_n} features by importance (Decision Tree):")
-    for i in idx:
-        print(f"{feature_names[i]:<25} {importances[i]:.4f}")
 
 if __name__ == "__main__":
     # Load data
@@ -113,5 +104,3 @@ if __name__ == "__main__":
     print(f"Unigram accuracy         : {acc_tree_uni:.4f}")
     print(f"Unigram + Bigram accuracy: {acc_tree_bi:.4f}")
 
-    show_tree_feature_importance(pipe_tree_uni, top_n=5)
-    show_tree_feature_importance(pipe_tree_bi, top_n=5)

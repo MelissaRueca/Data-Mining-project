@@ -28,3 +28,18 @@ python gradient_boosting.py
 | **Model training and evaluation** | `Multinomial_Naive_Bayes.py`, `logistic_regression.py`, `classification_tree.py`, `random_forest.py`, `gradient_boosting.py` |
 | **Main experimental results (performance metrics)** | `main.py` |
 | **Statistical comparison of models (McNemar tests, heatmap)** | `mcneman_test.py`, `mcneman_heatmap.py` |
+
+## External packages / libreries
+
+Install the following dependencies:
+```bash
+pip install numpy pandas matplotlib seaborn scikit-learn statsmodels nltk joblib
+```
+
+Additionally, download the NLTK language resources (only required once):
+```python
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+```
